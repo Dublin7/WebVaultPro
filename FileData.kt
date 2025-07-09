@@ -1,0 +1,1 @@
+data class FileData(val name: String, var content: String)
