@@ -6,6 +6,8 @@ import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
@@ -81,6 +83,12 @@ fun DevVaultProApp() {
                         selected = currentRoute == "sleep",
                         onClick = { navController.navigate("sleep") }
                     )
+                     NavigationBarItem(
+                        icon = { Icon(Icons.Default.Image, contentDescription = "NFT Minting") },
+                        label = { Text("NFT Minting") },
+                        selected = currentRoute == "crypto/nft",
+                        onClick = { navController.navigate("crypto/nft") }
+                    )
                 }
             }
         ) { paddingValues ->
@@ -100,6 +108,12 @@ fun DevVaultProApp() {
                 composable("crypto") { CryptoPortfolioScreen() }
                 composable("blockchain") { BlockchainExplorerScreen() }
                 composable("web3") { Web3DevToolsScreen() }
+                 composable("crypto/web3") {
+                        Web3DevToolsScreen()
+                    }
+                    composable("crypto/nft") {
+                        NFTMintingScreen()
+                    }
                 composable("sleep") { SleepChainScreen() }
             }
         }
@@ -139,4 +153,43 @@ fun ApiTestingScreen() {
 @Composable
 fun PerformanceMonitorScreen() {
     Text("Performance Monitor Screen")
+}
+
+@Composable
+fun CryptoPortfolioScreen() {
+    Text("Crypto Portfolio Screen")
+}
+
+@Composable
+fun BlockchainExplorerScreen() {
+    Text("Blockchain Explorer Screen")
+}
+
+@Composable
+fun Web3DevToolsScreen() {
+    Text("Web3 Dev Tools Screen")
+}
+
+@Composable
+fun SleepChainScreen() {
+    Text("Sleep Chain Screen")
+}
+
+@Composable
+fun NFTMintingScreen() {
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(16.dp)
+    ) {
+        Text("NFT Minting Screen", style = MaterialTheme.typography.headlineMedium)
+        Spacer(modifier = Modifier.height(16.dp))
+        Text("AI Powered NFT Creation Studio Coming Soon!", style = MaterialTheme.typography.bodyMedium)
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+fun DevVaultProAppPreview() {
+    DevVaultProApp()
 }

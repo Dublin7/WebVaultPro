@@ -107,11 +107,11 @@ fun CryptoHub(navController: NavController) {
             
             item {
                 FeatureCard(
-                    title = "NFT Collection",
-                    description = "View and manage your NFT collection across multiple marketplaces",
+                    title = "AI NFT Studio",
+                    description = "Create, mint, and manage NFTs with AI-generated artwork",
                     icon = Icons.Default.Image,
                     color = Color(0xFFE91E63),
-                    onClick = { /* Navigate to NFT screen */ }
+                    onClick = { navController.navigate("crypto/nft") }
                 )
             }
         }

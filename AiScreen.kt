@@ -251,6 +251,8 @@ fun AiScreen() {
                                 "🌙 Feeling stressed? Try Sleep Chain! It combines 528Hz healing frequencies with guided breathing. Perfect for developer wellness breaks. Check the Sleep tab!"
                             inputText.contains("focus", ignoreCase = true) || inputText.contains("concentration", ignoreCase = true) -> 
                                 "🎯 Boost your focus with: 1) Regular breaks using Sleep Chain 2) 528Hz music for enhanced creativity 3) Breathing exercises between coding sessions 4) Minimize distractions"
+            inputText.contains("nft", ignoreCase = true) || inputText.contains("mint", ignoreCase = true) -> 
+                                "🎨 NFT Creation Made Easy! Use our AI NFT Studio to:\n\n• Generate unique artwork with AI prompts\n• Choose from multiple art styles (Digital Art, Oil Painting, Pixel Art)\n• Smart contract deployment on multiple chains\n• Automated metadata generation\n• Royalty settings and gas optimization\n\nCheck out the NFT tab in Crypto Hub!"
                             inputText.contains("sleep", ignoreCase = true) || inputText.contains("insomnia", ignoreCase = true) -> 
                                 "😴 Sleep Chain can help! Use the 4-7-8 breathing pattern with 528Hz frequencies before bed. It's scientifically proven to activate the parasympathetic nervous system for better rest."
                             else -> 
