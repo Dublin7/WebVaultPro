@@ -80,6 +80,46 @@ fun AiScreen() {
             }
         }
 
+        Spacer(modifier = Modifier.height(8.dp))
+
+        // Blockchain-specific actions
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            Button(
+                onClick = {
+                    chatMessages = chatMessages + ChatMessage(
+                        "Help me optimize gas usage in my smart contract",
+                        true
+                    )
+                    chatMessages = chatMessages + ChatMessage(
+                        "⛽ Gas Optimization Tips:\n\n• Use `uint256` instead of smaller uints\n• Pack struct variables efficiently\n• Use `view`/`pure` functions when possible\n• Avoid unnecessary storage operations\n• Consider using events instead of storage for logs",
+                        false
+                    )
+                },
+                modifier = Modifier.weight(1f)
+            ) {
+                Text("Gas Tips")
+            }
+            
+            Button(
+                onClick = {
+                    chatMessages = chatMessages + ChatMessage(
+                        "Show me Web3 security best practices",
+                        true
+                    )
+                    chatMessages = chatMessages + ChatMessage(
+                        "🔒 Web3 Security Checklist:\n\n• Always validate user inputs\n• Use reentrancy guards\n• Implement proper access controls\n• Test with multiple scenarios\n• Audit smart contracts before mainnet\n• Use established libraries (OpenZeppelin)",
+                        false
+                    )
+                },
+                modifier = Modifier.weight(1f)
+            ) {
+                Text("Security")
+            }
+        }
+
         // Chat Messages
         LazyColumn(
             modifier = Modifier
@@ -161,6 +201,12 @@ fun AiScreen() {
                                 "⚡ For optimization, I'd recommend: 1) Profile your code first 2) Focus on bottlenecks 3) Consider caching strategies"
                             inputText.contains("test", ignoreCase = true) -> 
                                 "🧪 Testing is crucial! I can help you write unit tests, integration tests, or suggest testing strategies for your code."
+                            inputText.contains("smart contract", ignoreCase = true) || inputText.contains("blockchain", ignoreCase = true) -> 
+                                "⛓️ I can help with blockchain development! Need assistance with smart contracts, Web3 integration, or DeFi protocols?"
+                            inputText.contains("crypto", ignoreCase = true) || inputText.contains("web3", ignoreCase = true) -> 
+                                "🚀 Web3 development is exciting! I can help with wallet integration, transaction handling, and blockchain interactions."
+                            inputText.contains("gas", ignoreCase = true) && inputText.contains("ethereum", ignoreCase = true) -> 
+                                "⛽ Gas optimization is crucial! Consider using: 1) Efficient data structures 2) Batch operations 3) Gas-efficient patterns"
                             else -> 
                                 "💡 I understand you're asking about: \"$inputText\". Could you provide more context about your specific development challenge?"
                         }

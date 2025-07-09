@@ -69,6 +69,12 @@ fun DevVaultProApp() {
                         selected = currentRoute == "performance",
                         onClick = { navController.navigate("performance") }
                     )
+                    NavigationBarItem(
+                        icon = { Icon(Icons.Default.CurrencyBitcoin, contentDescription = "Crypto") },
+                        label = { Text("Crypto") },
+                        selected = currentRoute == "crypto",
+                        onClick = { navController.navigate("crypto") }
+                    )
                 }
             }
         ) { paddingValues ->
@@ -85,6 +91,9 @@ fun DevVaultProApp() {
                 composable("templates") { ProjectTemplatesScreen() }
                 composable("api-testing") { ApiTestingScreen() }
                 composable("performance") { PerformanceMonitorScreen() }
+                composable("crypto") { CryptoPortfolioScreen() }
+                composable("blockchain") { BlockchainExplorerScreen() }
+                composable("web3") { Web3DevToolsScreen() }
             }
         }
     }
