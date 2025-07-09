@@ -8,6 +8,7 @@ import Navigation from "@/components/navigation";
 import Landing from "@/pages/landing";
 import Dashboard from "@/pages/dashboard";
 import ShellGenerator from "@/pages/shell-generator";
+import AIAgents from "@/pages/ai-agents";
 import NotFound from "@/pages/not-found";
 
 function Router() {
@@ -23,6 +24,7 @@ function Router() {
           <>
             <Route path="/" component={Dashboard} />
             <Route path="/shell-generator" component={ShellGenerator} />
+            <Route path="/ai-agents" component={AIAgents} />
           </>
         )}
         <Route component={NotFound} />
