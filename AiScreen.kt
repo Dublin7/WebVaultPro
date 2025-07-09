@@ -82,6 +82,46 @@ fun AiScreen() {
 
         Spacer(modifier = Modifier.height(8.dp))
 
+        // Wellness actions
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            Button(
+                onClick = {
+                    chatMessages = chatMessages + ChatMessage(
+                        "I need to relax and reduce stress",
+                        true
+                    )
+                    chatMessages = chatMessages + ChatMessage(
+                        "🌙 Perfect! Try Sleep Chain for deep relaxation:\n\n• 528Hz healing frequencies for DNA repair\n• Guided breathing exercises (4-7-8 pattern recommended)\n• Calming visuals with wave animations\n• Sessions from 5-30 minutes\n\nSwipe to the Sleep tab to start your wellness journey! 🧘‍♂️",
+                        false
+                    )
+                },
+                modifier = Modifier.weight(1f)
+            ) {
+                Text("Wellness")
+            }
+            
+            Button(
+                onClick = {
+                    chatMessages = chatMessages + ChatMessage(
+                        "Show me developer productivity tips",
+                        true
+                    )
+                    chatMessages = chatMessages + ChatMessage(
+                        "⚡ Productivity Boosters:\n\n• Take 5-min breaks every 25 mins (Pomodoro)\n• Use Sleep Chain during breaks for mental reset\n• 528Hz music improves focus and creativity\n• Deep breathing reduces coding stress\n• Regular relaxation = better problem solving",
+                        false
+                    )
+                },
+                modifier = Modifier.weight(1f)
+            ) {
+                Text("Focus Tips")
+            }
+        }
+
+        Spacer(modifier = Modifier.height(8.dp))
+
         // Blockchain-specific actions
         Row(
             modifier = Modifier.fillMaxWidth(),
@@ -207,6 +247,12 @@ fun AiScreen() {
                                 "🚀 Web3 development is exciting! I can help with wallet integration, transaction handling, and blockchain interactions."
                             inputText.contains("gas", ignoreCase = true) && inputText.contains("ethereum", ignoreCase = true) -> 
                                 "⛽ Gas optimization is crucial! Consider using: 1) Efficient data structures 2) Batch operations 3) Gas-efficient patterns"
+                            inputText.contains("stress", ignoreCase = true) || inputText.contains("tired", ignoreCase = true) || inputText.contains("relax", ignoreCase = true) -> 
+                                "🌙 Feeling stressed? Try Sleep Chain! It combines 528Hz healing frequencies with guided breathing. Perfect for developer wellness breaks. Check the Sleep tab!"
+                            inputText.contains("focus", ignoreCase = true) || inputText.contains("concentration", ignoreCase = true) -> 
+                                "🎯 Boost your focus with: 1) Regular breaks using Sleep Chain 2) 528Hz music for enhanced creativity 3) Breathing exercises between coding sessions 4) Minimize distractions"
+                            inputText.contains("sleep", ignoreCase = true) || inputText.contains("insomnia", ignoreCase = true) -> 
+                                "😴 Sleep Chain can help! Use the 4-7-8 breathing pattern with 528Hz frequencies before bed. It's scientifically proven to activate the parasympathetic nervous system for better rest."
                             else -> 
                                 "💡 I understand you're asking about: \"$inputText\". Could you provide more context about your specific development challenge?"
                         }

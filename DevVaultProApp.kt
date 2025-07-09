@@ -75,6 +75,12 @@ fun DevVaultProApp() {
                         selected = currentRoute == "crypto",
                         onClick = { navController.navigate("crypto") }
                     )
+                    NavigationBarItem(
+                        icon = { Icon(Icons.Default.Nightlight, contentDescription = "Sleep") },
+                        label = { Text("Sleep") },
+                        selected = currentRoute == "sleep",
+                        onClick = { navController.navigate("sleep") }
+                    )
                 }
             }
         ) { paddingValues ->
@@ -94,6 +100,7 @@ fun DevVaultProApp() {
                 composable("crypto") { CryptoPortfolioScreen() }
                 composable("blockchain") { BlockchainExplorerScreen() }
                 composable("web3") { Web3DevToolsScreen() }
+                composable("sleep") { SleepChainScreen() }
             }
         }
     }
