@@ -21,22 +21,20 @@ data class FileItem(
     val isDirectory: Boolean,
     val size: Long = 0,
     val lastModified: Long = System.currentTimeMillis(),
-    val extension: String = ""
+    val extension: String? = null
 )
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun FileScreen() {
-    var currentPath by remember { mutableStateOf("/") }
     var files by remember { mutableStateOf(getSampleFiles()) }
+    var currentPath by remember { mutableStateOf("/") }
+    var selectedFile by remember { mutableStateOf<FileItem?>(null) }
+    var showCreateDialog by remember { mutableStateOf(false) }
     var searchQuery by remember { mutableStateOf("") }
-    var selectedFiles by remember { mutableStateOf(setOf<String>()) }
-    var showBulkActions by remember { mutableStateOf(false) }
 
     val filteredFiles = files.filter { file ->
-        searchQuery.isEmpty() || 
-        file.name.contains(searchQuery, ignoreCase = true) ||
-        file.extension.contains(searchQuery, ignoreCase = true)
+        searchQuery.isEmpty() || file.name.contains(searchQuery, ignoreCase = true)
     }
 
     Column(
@@ -57,139 +55,120 @@ fun FileScreen() {
             )
             
             Row {
-                IconButton(onClick = { /* TODO: Create new file */ }) {
-                    Icon(Icons.Default.Add, contentDescription = "New File")
+                IconButton(onClick = { showCreateDialog = true }) {
+                    Icon(Icons.Default.CreateNewFolder, contentDescription = "Create Folder")
                 }
-                IconButton(onClick = { showBulkActions = !showBulkActions }) {
-                    Icon(Icons.Default.Settings, contentDescription = "Bulk Actions")
+                IconButton(onClick = { /* Add file functionality */ }) {
+                    Icon(Icons.Default.NoteAdd, contentDescription = "Create File")
                 }
+            }
+        }
+
+        Spacer(modifier = Modifier.height(8.dp))
+
+        // Current Path
+        Card(
+            modifier = Modifier.fillMaxWidth(),
+            colors = CardDefaults.cardColors(
+                containerColor = MaterialTheme.colorScheme.primaryContainer
+            )
+        ) {
+            Row(
+                modifier = Modifier.padding(16.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Icon(
+                    Icons.Default.Folder,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.onPrimaryContainer
+                )
+                Spacer(modifier = Modifier.width(8.dp))
+                Text(
+                    text = currentPath,
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onPrimaryContainer
+                )
             }
         }
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        // Path breadcrumb
-        Card(
-            modifier = Modifier.fillMaxWidth()
-        ) {
-            Text(
-                text = "📁 $currentPath",
-                modifier = Modifier.padding(12.dp),
-                style = MaterialTheme.typography.bodyMedium
-            )
-        }
-
-        Spacer(modifier = Modifier.height(8.dp))
-
-        // Search and filter
+        // Search Bar
         OutlinedTextField(
             value = searchQuery,
             onValueChange = { searchQuery = it },
-            placeholder = { Text("Search files, extensions...") },
+            placeholder = { Text("Search files...") },
             leadingIcon = { Icon(Icons.Default.Search, contentDescription = null) },
             modifier = Modifier.fillMaxWidth()
         )
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        // Bulk actions
-        if (showBulkActions && selectedFiles.isNotEmpty()) {
-            Card(
-                modifier = Modifier.fillMaxWidth(),
-                colors = CardDefaults.cardColors(
-                    containerColor = MaterialTheme.colorScheme.primaryContainer
-                )
-            ) {
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(12.dp),
-                    horizontalArrangement = Arrangement.SpaceBetween
-                ) {
-                    Text("${selectedFiles.size} files selected")
-                    Row {
-                        TextButton(onClick = { /* TODO: Bulk rename */ }) {
-                            Text("Rename")
-                        }
-                        TextButton(onClick = { /* TODO: Bulk move */ }) {
-                            Text("Move")
-                        }
-                        TextButton(onClick = { /* TODO: Bulk delete */ }) {
-                            Text("Delete")
-                        }
-                    }
-                }
-            }
-            Spacer(modifier = Modifier.height(8.dp))
-        }
-
-        // File list
+        // File List
         LazyColumn(
-            verticalArrangement = Arrangement.spacedBy(4.dp)
+            verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
             items(filteredFiles) { file ->
                 FileItemCard(
                     file = file,
-                    isSelected = selectedFiles.contains(file.path),
-                    onSelectionChange = { isSelected ->
-                        selectedFiles = if (isSelected) {
-                            selectedFiles + file.path
-                        } else {
-                            selectedFiles - file.path
-                        }
-                    },
                     onClick = {
                         if (file.isDirectory) {
                             currentPath = file.path
-                            // TODO: Load directory contents
                         } else {
-                            // TODO: Open file
+                            selectedFile = file
                         }
                     }
                 )
             }
         }
     }
+
+    // Create Dialog
+    if (showCreateDialog) {
+        CreateFileDialog(
+            onDismiss = { showCreateDialog = false },
+            onCreate = { name, isDirectory ->
+                val newFile = FileItem(
+                    name = name,
+                    path = "$currentPath/$name",
+                    isDirectory = isDirectory,
+                    size = if (isDirectory) 0 else 1024,
+                    extension = if (!isDirectory) name.substringAfterLast('.', "") else null
+                )
+                files = files + newFile
+                showCreateDialog = false
+            }
+        )
+    }
 }
 
 @Composable
 fun FileItemCard(
     file: FileItem,
-    isSelected: Boolean,
-    onSelectionChange: (Boolean) -> Unit,
     onClick: () -> Unit
 ) {
-    val dateFormat = SimpleDateFormat("MMM dd, yyyy HH:mm", Locale.getDefault())
+    val dateFormat = SimpleDateFormat("MMM dd, yyyy", Locale.getDefault())
     
     Card(
-        onClick = onClick,
         modifier = Modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(
-            containerColor = if (isSelected) 
-                MaterialTheme.colorScheme.primaryContainer 
-            else 
-                MaterialTheme.colorScheme.surface
-        )
+        onClick = onClick
     ) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(12.dp),
+                .padding(16.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Checkbox(
-                checked = isSelected,
-                onCheckedChange = onSelectionChange
-            )
-            
-            Spacer(modifier = Modifier.width(8.dp))
-            
             Icon(
                 imageVector = when {
                     file.isDirectory -> Icons.Default.Folder
                     file.extension == "kt" -> Icons.Default.Code
+                    file.extension == "java" -> Icons.Default.Code
+                    file.extension == "xml" -> Icons.Default.Code
                     file.extension == "json" -> Icons.Default.DataObject
                     file.extension == "md" -> Icons.Default.Description
+                    file.extension == "txt" -> Icons.Default.TextSnippet
+                    file.extension == "png" || file.extension == "jpg" -> Icons.Default.Image
                     else -> Icons.Default.InsertDriveFile
                 },
                 contentDescription = null,
@@ -232,11 +211,64 @@ fun FileItemCard(
                 }
             }
             
-            IconButton(onClick = { /* TODO: File actions menu */ }) {
-                Icon(Icons.Default.MoreVert, contentDescription = "More actions")
+            IconButton(onClick = { /* More options */ }) {
+                Icon(Icons.Default.MoreVert, contentDescription = "More options")
             }
         }
     }
+}
+
+@Composable
+fun CreateFileDialog(
+    onDismiss: () -> Unit,
+    onCreate: (String, Boolean) -> Unit
+) {
+    var fileName by remember { mutableStateOf("") }
+    var isDirectory by remember { mutableStateOf(false) }
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("Create ${if (isDirectory) "Folder" else "File"}") },
+        text = {
+            Column {
+                OutlinedTextField(
+                    value = fileName,
+                    onValueChange = { fileName = it },
+                    label = { Text("Name") },
+                    modifier = Modifier.fillMaxWidth()
+                )
+                
+                Spacer(modifier = Modifier.height(8.dp))
+                
+                Row(
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Checkbox(
+                        checked = isDirectory,
+                        onCheckedChange = { isDirectory = it }
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text("Create as folder")
+                }
+            }
+        },
+        confirmButton = {
+            Button(
+                onClick = {
+                    if (fileName.isNotBlank()) {
+                        onCreate(fileName, isDirectory)
+                    }
+                }
+            ) {
+                Text("Create")
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text("Cancel")
+            }
+        }
+    )
 }
 
 fun formatFileSize(bytes: Long): String {
@@ -258,12 +290,17 @@ fun getSampleFiles(): List<FileItem> {
         FileItem("MainActivity.kt", "/src/MainActivity.kt", false, 2048, extension = "kt"),
         FileItem("DevVaultProApp.kt", "/src/DevVaultProApp.kt", false, 3072, extension = "kt"),
         FileItem("AiScreen.kt", "/src/AiScreen.kt", false, 4096, extension = "kt"),
+        FileItem("NotesScreen.kt", "/src/NotesScreen.kt", false, 5120, extension = "kt"),
+        FileItem("FileScreen.kt", "/src/FileScreen.kt", false, 3584, extension = "kt"),
         FileItem("build.gradle", "/build.gradle", false, 1024, extension = "gradle"),
         FileItem("README.md", "/README.md", false, 512, extension = "md"),
         FileItem("assets", "/assets", true),
         FileItem("app-icon.png", "/assets/app-icon.png", false, 8192, extension = "png"),
         FileItem("config.json", "/config.json", false, 256, extension = "json"),
         FileItem("docs", "/docs", true),
-        FileItem("api-documentation.md", "/docs/api-documentation.md", false, 1536, extension = "md")
+        FileItem("api-documentation.md", "/docs/api-documentation.md", false, 1536, extension = "md"),
+        FileItem("AndroidManifest.xml", "/AndroidManifest.xml", false, 768, extension = "xml"),
+        FileItem("styles.xml", "/res/values/styles.xml", false, 512, extension = "xml"),
+        FileItem("strings.xml", "/res/values/strings.xml", false, 384, extension = "xml")
     )
 }

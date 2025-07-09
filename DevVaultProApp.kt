@@ -7,7 +7,6 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.dp
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
@@ -24,11 +23,21 @@ fun DevVaultProApp() {
         Scaffold(
             topBar = {
                 TopAppBar(
-                    title = { Text("DevVault Pro") }
+                    title = { Text("DevVault Pro") },
+                    colors = TopAppBarDefaults.topAppBarColors(
+                        containerColor = MaterialTheme.colorScheme.primaryContainer,
+                        titleContentColor = MaterialTheme.colorScheme.onPrimaryContainer
+                    )
                 )
             },
             bottomBar = {
                 NavigationBar {
+                    NavigationBarItem(
+                        icon = { Icon(Icons.Default.SmartToy, contentDescription = "AI") },
+                        label = { Text("AI") },
+                        selected = currentRoute == "ai",
+                        onClick = { navController.navigate("ai") }
+                    )
                     NavigationBarItem(
                         icon = { Icon(Icons.Default.Note, contentDescription = "Notes") },
                         label = { Text("Notes") },
@@ -48,30 +57,6 @@ fun DevVaultProApp() {
                         onClick = { navController.navigate("terminal") }
                     )
                     NavigationBarItem(
-                        icon = { Icon(Icons.Default.Code, contentDescription = "Snippets") },
-                        label = { Text("Snippets") },
-                        selected = currentRoute == "snippets",
-                        onClick = { navController.navigate("snippets") }
-                    )
-                    NavigationBarItem(
-                        icon = { Icon(Icons.Default.Folder, contentDescription = "Templates") },
-                        label = { Text("Templates") },
-                        selected = currentRoute == "templates",
-                        onClick = { navController.navigate("templates") }
-                    )
-                    NavigationBarItem(
-                        icon = { Icon(Icons.Default.Api, contentDescription = "API Testing") },
-                        label = { Text("API") },
-                        selected = currentRoute == "api-testing",
-                        onClick = { navController.navigate("api-testing") }
-                    )
-                    NavigationBarItem(
-                        icon = { Icon(Icons.Default.Monitoring, contentDescription = "Performance") },
-                        label = { Text("Monitor") },
-                        selected = currentRoute == "performance",
-                        onClick = { navController.navigate("performance") }
-                    )
-                    NavigationBarItem(
                         icon = { Icon(Icons.Default.CurrencyBitcoin, contentDescription = "Crypto") },
                         label = { Text("Crypto") },
                         selected = currentRoute?.startsWith("crypto") == true,
@@ -84,12 +69,6 @@ fun DevVaultProApp() {
                         onClick = { navController.navigate("sleep") }
                     )
                     NavigationBarItem(
-                        icon = { Icon(Icons.Default.Image, contentDescription = "NFT Minting") },
-                        label = { Text("NFT Minting") },
-                        selected = currentRoute == "crypto/nft",
-                        onClick = { navController.navigate("crypto/nft") }
-                    )
-                    NavigationBarItem(
                         icon = { Icon(Icons.Default.CloudUpload, contentDescription = "GitHub") },
                         label = { Text("GitHub") },
                         selected = currentRoute == "github",
@@ -100,30 +79,32 @@ fun DevVaultProApp() {
         ) { paddingValues ->
             NavHost(
                 navController = navController,
-                startDestination = "notes",
+                startDestination = "ai",
                 modifier = Modifier.padding(paddingValues)
             ) {
+                composable("ai") { AiScreen() }
                 composable("notes") { NotesScreen() }
                 composable("files") { FileScreen() }
                 composable("terminal") { TerminalScreen() }
-                composable("github") { GitHubScreen() }
                 composable("snippets") { CodeSnippetScreen() }
                 composable("templates") { ProjectTemplatesScreen() }
                 composable("api-testing") { ApiTestingScreen() }
                 composable("performance") { PerformanceMonitorScreen() }
-                composable("crypto") { CryptoPortfolioScreen() }
-                composable("blockchain") { BlockchainExplorerScreen() }
-                composable("web3") { Web3DevToolsScreen() }
-                 composable("crypto/web3") {
-                        Web3DevToolsScreen()
-                    }
-                    composable("crypto/nft") {
-                        NFTMintingScreen()
-                    }
+                composable("crypto") { CryptoHubScreen() }
+                composable("crypto/portfolio") { CryptoPortfolioScreen() }
+                composable("crypto/explorer") { BlockchainExplorerScreen() }
+                composable("crypto/web3") { Web3DevToolsScreen() }
+                composable("crypto/nft") { NFTMintingScreen() }
                 composable("sleep") { SleepChainScreen() }
+                composable("github") { GitHubScreen() }
             }
         }
     }
+}
+
+@Composable
+fun AiScreen() {
+    Text("AI Screen")
 }
 
 @Composable
@@ -159,6 +140,11 @@ fun ApiTestingScreen() {
 @Composable
 fun PerformanceMonitorScreen() {
     Text("Performance Monitor Screen")
+}
+
+@Composable
+fun CryptoHubScreen() {
+    Text("Crypto Hub Screen")
 }
 
 @Composable

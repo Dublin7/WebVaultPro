@@ -4,9 +4,10 @@ package com.devvaultpro.ui
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -14,6 +15,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.window.Dialog
 
 data class Note(
     val id: String,
@@ -21,44 +23,48 @@ data class Note(
     val content: String,
     val tags: List<String> = emptyList(),
     val language: String = "text",
-    val timestamp: Long = System.currentTimeMillis()
+    val createdAt: Long = System.currentTimeMillis()
 )
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun NotesScreen() {
     var notes by remember { mutableStateOf(getSampleNotes()) }
-    var searchQuery by remember { mutableStateOf("") }
-    var showCreateDialog by remember { mutableStateOf(false) }
+    var showAddDialog by remember { mutableStateOf(false) }
     var selectedNote by remember { mutableStateOf<Note?>(null) }
+    var searchQuery by remember { mutableStateOf("") }
+    var selectedTag by remember { mutableStateOf("All") }
 
     val filteredNotes = notes.filter { note ->
-        searchQuery.isEmpty() || 
-        note.title.contains(searchQuery, ignoreCase = true) ||
-        note.content.contains(searchQuery, ignoreCase = true) ||
-        note.tags.any { it.contains(searchQuery, ignoreCase = true) }
+        val matchesSearch = searchQuery.isEmpty() || 
+                           note.title.contains(searchQuery, ignoreCase = true) ||
+                           note.content.contains(searchQuery, ignoreCase = true)
+        val matchesTag = selectedTag == "All" || note.tags.contains(selectedTag)
+        matchesSearch && matchesTag
     }
+
+    val allTags = listOf("All") + notes.flatMap { it.tags }.distinct()
 
     Column(
         modifier = Modifier
             .fillMaxSize()
             .padding(16.dp)
     ) {
-        // Header with search
+        // Header
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
             Text(
-                text = "Smart Notes",
+                text = "Developer Notes",
                 style = MaterialTheme.typography.headlineMedium,
                 fontWeight = FontWeight.Bold
             )
             
             FloatingActionButton(
-                onClick = { showCreateDialog = true },
-                modifier = Modifier.size(48.dp)
+                onClick = { showAddDialog = true },
+                modifier = Modifier.size(56.dp)
             ) {
                 Icon(Icons.Default.Add, contentDescription = "Add Note")
             }
@@ -70,10 +76,25 @@ fun NotesScreen() {
         OutlinedTextField(
             value = searchQuery,
             onValueChange = { searchQuery = it },
-            placeholder = { Text("Search notes, tags, content...") },
+            placeholder = { Text("Search notes...") },
             leadingIcon = { Icon(Icons.Default.Search, contentDescription = null) },
             modifier = Modifier.fillMaxWidth()
         )
+
+        Spacer(modifier = Modifier.height(8.dp))
+
+        // Tag Filter
+        LazyRow(
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            items(allTags) { tag ->
+                FilterChip(
+                    onClick = { selectedTag = tag },
+                    label = { Text(tag) },
+                    selected = selectedTag == tag
+                )
+            }
+        }
 
         Spacer(modifier = Modifier.height(16.dp))
 
@@ -84,30 +105,31 @@ fun NotesScreen() {
             items(filteredNotes) { note ->
                 NoteCard(
                     note = note,
-                    onClick = { selectedNote = note }
+                    onClick = { selectedNote = note },
+                    onDelete = { notes = notes.filter { it.id != note.id } }
                 )
             }
         }
     }
 
-    // Create Note Dialog
-    if (showCreateDialog) {
+    // Add Note Dialog
+    if (showAddDialog) {
         CreateNoteDialog(
-            onDismiss = { showCreateDialog = false },
+            onDismiss = { showAddDialog = false },
             onSave = { newNote ->
-                notes = notes + newNote
-                showCreateDialog = false
+                notes = notes + newNote.copy(id = System.currentTimeMillis().toString())
+                showAddDialog = false
             }
         )
     }
 
-    // Note Detail Dialog
+    // View Note Dialog
     selectedNote?.let { note ->
-        NoteDetailDialog(
+        ViewNoteDialog(
             note = note,
             onDismiss = { selectedNote = null },
-            onUpdate = { updatedNote ->
-                notes = notes.map { if (it.id == updatedNote.id) updatedNote else it }
+            onEdit = { editedNote ->
+                notes = notes.map { if (it.id == editedNote.id) editedNote else it }
                 selectedNote = null
             }
         )
@@ -117,30 +139,32 @@ fun NotesScreen() {
 @Composable
 fun NoteCard(
     note: Note,
-    onClick: () -> Unit
+    onClick: () -> Unit,
+    onDelete: () -> Unit
 ) {
     Card(
-        onClick = onClick,
-        modifier = Modifier.fillMaxWidth()
+        modifier = Modifier
+            .fillMaxWidth(),
+        onClick = onClick
     ) {
         Column(
             modifier = Modifier.padding(16.dp)
         ) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
                     text = note.title,
                     style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold
+                    fontWeight = FontWeight.Bold,
+                    modifier = Modifier.weight(1f)
                 )
                 
-                Text(
-                    text = note.language.uppercase(),
-                    style = MaterialTheme.typography.labelSmall,
-                    color = MaterialTheme.colorScheme.primary
-                )
+                IconButton(onClick = onDelete) {
+                    Icon(Icons.Default.Delete, contentDescription = "Delete")
+                }
             }
             
             Spacer(modifier = Modifier.height(8.dp))
@@ -148,27 +172,25 @@ fun NoteCard(
             Text(
                 text = note.content.take(100) + if (note.content.length > 100) "..." else "",
                 style = MaterialTheme.typography.bodyMedium,
-                fontFamily = FontFamily.Monospace
+                color = MaterialTheme.colorScheme.onSurfaceVariant
             )
             
-            if (note.tags.isNotEmpty()) {
-                Spacer(modifier = Modifier.height(8.dp))
-                Row(
-                    horizontalArrangement = Arrangement.spacedBy(4.dp)
-                ) {
-                    note.tags.forEach { tag ->
-                        AssistChip(
-                            onClick = { },
-                            label = { Text(tag, style = MaterialTheme.typography.labelSmall) }
-                        )
-                    }
+            Spacer(modifier = Modifier.height(8.dp))
+            
+            LazyRow(
+                horizontalArrangement = Arrangement.spacedBy(4.dp)
+            ) {
+                items(note.tags) { tag ->
+                    AssistChip(
+                        onClick = { },
+                        label = { Text(tag, style = MaterialTheme.typography.bodySmall) }
+                    )
                 }
             }
         }
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CreateNoteDialog(
     onDismiss: () -> Unit,
@@ -179,11 +201,23 @@ fun CreateNoteDialog(
     var language by remember { mutableStateOf("kotlin") }
     var tags by remember { mutableStateOf("") }
 
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        title = { Text("Create New Note") },
-        text = {
-            Column {
+    Dialog(onDismissRequest = onDismiss) {
+        Card(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp)
+        ) {
+            Column(
+                modifier = Modifier.padding(16.dp)
+            ) {
+                Text(
+                    text = "Create New Note",
+                    style = MaterialTheme.typography.headlineSmall,
+                    fontWeight = FontWeight.Bold
+                )
+                
+                Spacer(modifier = Modifier.height(16.dp))
+                
                 OutlinedTextField(
                     value = title,
                     onValueChange = { title = it },
@@ -197,10 +231,9 @@ fun CreateNoteDialog(
                     value = content,
                     onValueChange = { content = it },
                     label = { Text("Content") },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(120.dp),
-                    maxLines = 5
+                    modifier = Modifier.fillMaxWidth(),
+                    minLines = 5,
+                    maxLines = 10
                 )
                 
                 Spacer(modifier = Modifier.height(8.dp))
@@ -220,82 +253,178 @@ fun CreateNoteDialog(
                     label = { Text("Tags (comma separated)") },
                     modifier = Modifier.fillMaxWidth()
                 )
+                
+                Spacer(modifier = Modifier.height(16.dp))
+                
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.End
+                ) {
+                    TextButton(onClick = onDismiss) {
+                        Text("Cancel")
+                    }
+                    
+                    Spacer(modifier = Modifier.width(8.dp))
+                    
+                    Button(
+                        onClick = {
+                            if (title.isNotBlank() && content.isNotBlank()) {
+                                val note = Note(
+                                    id = "",
+                                    title = title,
+                                    content = content,
+                                    language = language,
+                                    tags = tags.split(",").map { it.trim() }.filter { it.isNotBlank() }
+                                )
+                                onSave(note)
+                            }
+                        }
+                    ) {
+                        Text("Save")
+                    }
+                }
             }
-        },
-        confirmButton = {
-            TextButton(
-                onClick = {
-                    if (title.isNotBlank() && content.isNotBlank()) {
-                        onSave(
-                            Note(
-                                id = System.currentTimeMillis().toString(),
-                                title = title,
-                                content = content,
-                                language = language,
-                                tags = tags.split(",").map { it.trim() }.filter { it.isNotBlank() }
-                            )
+        }
+    }
+}
+
+@Composable
+fun ViewNoteDialog(
+    note: Note,
+    onDismiss: () -> Unit,
+    onEdit: (Note) -> Unit
+) {
+    var isEditing by remember { mutableStateOf(false) }
+    var title by remember { mutableStateOf(note.title) }
+    var content by remember { mutableStateOf(note.content) }
+    var language by remember { mutableStateOf(note.language) }
+    var tags by remember { mutableStateOf(note.tags.joinToString(", ")) }
+
+    Dialog(onDismissRequest = onDismiss) {
+        Card(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp)
+        ) {
+            Column(
+                modifier = Modifier.padding(16.dp)
+            ) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = if (isEditing) "Edit Note" else note.title,
+                        style = MaterialTheme.typography.headlineSmall,
+                        fontWeight = FontWeight.Bold
+                    )
+                    
+                    IconButton(
+                        onClick = { isEditing = !isEditing }
+                    ) {
+                        Icon(
+                            if (isEditing) Icons.Default.Close else Icons.Default.Edit,
+                            contentDescription = if (isEditing) "Cancel Edit" else "Edit Note"
                         )
                     }
                 }
-            ) {
-                Text("Save")
-            }
-        },
-        dismissButton = {
-            TextButton(onClick = onDismiss) {
-                Text("Cancel")
-            }
-        }
-    )
-}
-
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-fun NoteDetailDialog(
-    note: Note,
-    onDismiss: () -> Unit,
-    onUpdate: (Note) -> Unit
-) {
-    var content by remember { mutableStateOf(note.content) }
-
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        title = { Text(note.title) },
-        text = {
-            Column {
-                Text(
-                    text = "Language: ${note.language}",
-                    style = MaterialTheme.typography.labelMedium,
-                    color = MaterialTheme.colorScheme.primary
-                )
                 
-                Spacer(modifier = Modifier.height(8.dp))
+                Spacer(modifier = Modifier.height(16.dp))
                 
-                OutlinedTextField(
-                    value = content,
-                    onValueChange = { content = it },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(200.dp),
-                    maxLines = 8
-                )
-            }
-        },
-        confirmButton = {
-            TextButton(
-                onClick = {
-                    onUpdate(note.copy(content = content))
+                if (isEditing) {
+                    OutlinedTextField(
+                        value = title,
+                        onValueChange = { title = it },
+                        label = { Text("Title") },
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                    
+                    Spacer(modifier = Modifier.height(8.dp))
+                    
+                    OutlinedTextField(
+                        value = content,
+                        onValueChange = { content = it },
+                        label = { Text("Content") },
+                        modifier = Modifier.fillMaxWidth(),
+                        minLines = 5,
+                        maxLines = 10
+                    )
+                    
+                    Spacer(modifier = Modifier.height(8.dp))
+                    
+                    OutlinedTextField(
+                        value = language,
+                        onValueChange = { language = it },
+                        label = { Text("Language") },
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                    
+                    Spacer(modifier = Modifier.height(8.dp))
+                    
+                    OutlinedTextField(
+                        value = tags,
+                        onValueChange = { tags = it },
+                        label = { Text("Tags (comma separated)") },
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                } else {
+                    SelectionContainer {
+                        Text(
+                            text = note.content,
+                            style = MaterialTheme.typography.bodyMedium,
+                            fontFamily = if (note.language != "text") FontFamily.Monospace else FontFamily.Default,
+                            modifier = Modifier.fillMaxWidth()
+                        )
+                    }
+                    
+                    Spacer(modifier = Modifier.height(8.dp))
+                    
+                    LazyRow(
+                        horizontalArrangement = Arrangement.spacedBy(4.dp)
+                    ) {
+                        items(note.tags) { tag ->
+                            AssistChip(
+                                onClick = { },
+                                label = { Text(tag, style = MaterialTheme.typography.bodySmall) }
+                            )
+                        }
+                    }
                 }
-            ) {
-                Text("Update")
-            }
-        },
-        dismissButton = {
-            TextButton(onClick = onDismiss) {
-                Text("Close")
+                
+                Spacer(modifier = Modifier.height(16.dp))
+                
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.End
+                ) {
+                    TextButton(onClick = onDismiss) {
+                        Text("Close")
+                    }
+                    
+                    if (isEditing) {
+                        Spacer(modifier = Modifier.width(8.dp))
+                        
+                        Button(
+                            onClick = {
+                                if (title.isNotBlank() && content.isNotBlank()) {
+                                    val editedNote = note.copy(
+                                        title = title,
+                                        content = content,
+                                        language = language,
+                                        tags = tags.split(",").map { it.trim() }.filter { it.isNotBlank() }
+                                    )
+                                    onEdit(editedNote)
+                                }
+                            }
+                        ) {
+                            Text("Save")
+                        }
+                    }
+                }
             }
         }
-    )
+    }
 }
 
 fun getSampleNotes(): List<Note> {
@@ -315,6 +444,13 @@ fun getSampleNotes(): List<Note> {
                     expensiveOperation() 
                 }
                 val result = deferred.await()
+                
+                // Suspend function
+                suspend fun fetchUser(id: String): User {
+                    return withContext(Dispatchers.IO) {
+                        apiService.getUser(id)
+                    }
+                }
             """.trimIndent(),
             tags = listOf("kotlin", "coroutines", "async"),
             language = "kotlin"
@@ -323,14 +459,23 @@ fun getSampleNotes(): List<Note> {
             id = "2",
             title = "Git Commands Reference",
             content = """
+                # Basic Git Commands
                 git status
                 git add .
                 git commit -m "message"
                 git push origin main
                 git pull origin main
+                
+                # Branch Operations
                 git branch feature-name
                 git checkout feature-name
                 git merge feature-name
+                git branch -d feature-name
+                
+                # Remote Operations
+                git remote add origin <url>
+                git fetch origin
+                git reset --hard origin/main
             """.trimIndent(),
             tags = listOf("git", "version-control", "reference"),
             language = "bash"
@@ -350,6 +495,16 @@ fun getSampleNotes(): List<Note> {
                     data class Success<T>(val data: T) : NetworkResult<T>()
                     data class Error<T>(val message: String) : NetworkResult<T>()
                     class Loading<T> : NetworkResult<T>()
+                }
+                
+                // Usage
+                suspend fun fetchData(): NetworkResult<ApiResponse<User>> {
+                    return try {
+                        val response = apiService.getUser()
+                        NetworkResult.Success(response)
+                    } catch (e: Exception) {
+                        NetworkResult.Error(e.message ?: "Unknown error")
+                    }
                 }
             """.trimIndent(),
             tags = listOf("kotlin", "api", "model", "networking"),
