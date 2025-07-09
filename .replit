@@ -1,4 +1,5 @@
-modules = ["nodejs-20", "bash", "dotnet-7.0", "dotnet-8.0", "angular-node-20", "c-clang14", "docker", "nodejs-with-prybar-18", "web", "typescript-language-server", "python-3.10", "python-base-3.13", "php-8.1", "php-8.3", "nodejs-23", "java-graalvm22.3", "gcloud", "go-1.23"]
+modules = ["nodejs-20", "bash", "dotnet-7.0", "dotnet-8.0", "angular-node-20", "c-clang14", "docker", "nodejs-with-prybar-18", "web", "typescript-language-server", "python-3.10", "python-base-3.13", "php-8.1", "php-8.3", "nodejs-23", "java-graalvm22.3", "gcloud", "go-1.23", "postgresql-16"]
+run = "node index.js"
 
 [nix]
 channel = "stable-24_05"
@@ -6,6 +7,7 @@ channel = "stable-24_05"
 [deployment]
 deploymentTarget = "static"
 publicDir = "."
+run = ["sh", "-c", "node index.js"]
 
 [workflows]
 runButton = "Start Server"
