@@ -9,7 +9,8 @@ import {
   DropdownMenuTrigger,
   DropdownMenuSeparator
 } from "@/components/ui/dropdown-menu";
-import { ChevronDown } from "lucide-react";
+import { ChevronDown, Terminal } from "lucide-react";
+import { Link } from "wouter";
 
 export default function Navigation() {
   const { isAuthenticated, user } = useAuth();
@@ -50,19 +51,22 @@ export default function Navigation() {
             <div className="flex-shrink-0">
               <h1 className="text-xl font-bold text-gray-900">SecureApp</h1>
             </div>
-            <div className="hidden md:block ml-10">
-              <div className="flex items-baseline space-x-4">
-                <a href="#home" className="text-gray-900 hover:text-blue-600 px-3 py-2 rounded-md text-sm font-medium transition-colors">Home</a>
-                <a href="#features" className="text-gray-500 hover:text-blue-600 px-3 py-2 rounded-md text-sm font-medium transition-colors">Features</a>
-                <a href="#about" className="text-gray-500 hover:text-blue-600 px-3 py-2 rounded-md text-sm font-medium transition-colors">About</a>
+            {isAuthenticated && (
+              <div className="hidden md:block ml-10">
+                <div className="flex items-baseline space-x-4">
+                  <Link href="/" className="text-gray-900 hover:text-blue-600 px-3 py-2 rounded-md text-sm font-medium transition-colors">Dashboard</Link>
+                  <Link href="/shell-generator" className="text-gray-500 hover:text-blue-600 px-3 py-2 rounded-md text-sm font-medium transition-colors flex items-center gap-1">
+                    <Terminal className="w-4 h-4" />
+                    Shell Generator
+                  </Link>
+                </div>
               </div>
-            </div>
+            )}
           </div>
           
           {/* Authentication State */}
           {isAuthenticated && user ? (
             <div className="flex items-center space-x-4">
-              <a href="#dashboard" className="text-gray-500 hover:text-blue-600 px-3 py-2 rounded-md text-sm font-medium transition-colors">Dashboard</a>
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button variant="ghost" className="flex items-center space-x-2 text-gray-700 hover:text-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 rounded-lg p-2 transition-colors">

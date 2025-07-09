@@ -7,6 +7,7 @@ import { useAuth } from "@/hooks/useAuth";
 import Navigation from "@/components/navigation";
 import Landing from "@/pages/landing";
 import Dashboard from "@/pages/dashboard";
+import ShellGenerator from "@/pages/shell-generator";
 import NotFound from "@/pages/not-found";
 
 function Router() {
@@ -19,7 +20,10 @@ function Router() {
         {isLoading || !isAuthenticated ? (
           <Route path="/" component={Landing} />
         ) : (
-          <Route path="/" component={Dashboard} />
+          <>
+            <Route path="/" component={Dashboard} />
+            <Route path="/shell-generator" component={ShellGenerator} />
+          </>
         )}
         <Route component={NotFound} />
       </Switch>
