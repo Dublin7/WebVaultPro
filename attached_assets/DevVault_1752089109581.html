@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DevVault Pro - Secure Developer Vault</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/marked/9.1.2/marked.min.js"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    
+    <!-- Firebase SDK -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/firebase/10.7.1/firebase-app-compat.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/firebase/10.7.1/firebase-auth-compat.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/firebase/10.7.1/firebase-firestore-compat.min.js"></script>
+    
+    <!-- Crypto for secure token handling -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.2.0/crypto-js.min.js"></script>
+    
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#5D5CDE',
+                        'dark-bg': '#181818',
+                        'dark-surface': '#2a2a2a',
+                        'dark-border': '#3a3a3a'
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        .terminal-font { font-family: 'Courier New', monospace; }
+        .markdown-content h1 { @apply text-2xl font-bold mb-4; }
+        .markdown-content h2 { @apply text-xl font-bold mb-3; }
+        .markdown-content h3 { @apply text-lg font-bold mb-2; }
+        .markdown-content p { @apply mb-3; }
+        .markdown-content ul { @apply list-disc list-inside mb-3; }
+        .markdown-content ol { @apply list-decimal list-inside mb-3; }
+        .markdown-content code { @apply bg-gray-200 dark:bg-gray-700 px-1 rounded text-sm; }
+        .markdown-content pre { @apply bg-gray-100 dark:bg-gray-800 p-3 rounded mb-3 overflow-x-auto; }
+        .markdown-content blockquote { @apply border-l-4 border-gray-300 pl-4 italic mb-3; }
+        .sync-indicator { @apply w-2 h-2 rounded-full; }
+        .sync-online { @apply bg-green-500; }
+        .sync-offline { @apply bg-red-500; }
+        .sync-syncing { @apply bg-yellow-500 animate-pulse; }
+    </style>
+</head>
+<body class="bg-white dark:bg-dark-bg text-gray-900 dark:text-gray-100 min-h-screen">
+    <!-- Loading Screen -->
+    <div id="loading-screen" class="fixed inset-0 bg-white dark:bg-dark-bg flex items-center justify-center z-50">
+        <div class="text-center">
+            <i class="fas fa-code text-primary text-4xl mb-4 animate-pulse"></i>
+            <h2 class="text-xl font-bold mb-2">DevVault Pro</h2>
+            <p class="text-gray-500">Initializing secure vault...</p>
+        </div>
+    </div>
+
+    <!-- Authentication Modal -->
+    <div id="auth-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+        <div class="bg-white dark:bg-dark-surface rounded-lg shadow-xl max-w-md w-full mx-4 p-6">
+            <div class="text-center mb-6">
+                <i class="fas fa-shield-alt text-primary text-3xl mb-3"></i>
+                <h2 class="text-xl font-bold">Secure Access</h2>
+                <p class="text-gray-600 dark:text-gray-400 text-sm">Sign in to sync your vault across devices</p>
+            </div>
+            
+            <div id="auth-tabs" class="flex mb-4 border-b border-gray-200 dark:border-dark-border">
+                <button onclick="switchAuthTab('signin')" id="signin-tab" class="flex-1 py-2 text-center border-b-2 border-primary text-primary font-medium">Sign In</button>
+                <button onclick="switchAuthTab('signup')" id="signup-tab" class="flex-1 py-2 text-center text-gray-500 hover:text-gray-700">Sign Up</button>
+            </div>
+
+            <form id="auth-form" onsubmit="handleAuth(event)">
+                <div class="space-y-4">
+                    <div>
+                        <input type="email" id="auth-email" placeholder="Email address" required class="w-full px-4 py-2 border border-gray-300 dark:border-dark-border rounded-lg text-base bg-white dark:bg-dark-bg">
+                    </div>
+                    <div>
+                        <input type="password" id="auth-password" placeholder="Password" required class="w-full px-4 py-2 border border-gray-300 dark:border-dark-border rounded-lg text-base bg-white dark:bg-dark-bg">
+                    </div>
+                    <button type="submit" id="auth-submit" class="w-full bg-primary text-white py-2 rounded-lg hover:opacity-90 flex items-center justify-center">
+                        <span id="auth-submit-text">Sign In</span>
+                        <i id="auth-loading" class="hidden fas fa-spinner fa-spin ml-2"></i>
+                    </button>
+                </div>
+            </form>
+
+            <div class="mt-4 text-center">
+                <button onclick="signInAnonymously()" class="text-sm text-gray-500 hover:text-primary">
+                    Continue as Guest (no cloud sync)
+                </button>
+            </div>
+
+            <div id="auth-error" class="hidden mt-4 p-3 bg-red-100 dark:bg-red-900 text-red-700 dark:text-red-300 rounded text-sm"></div>
+        </div>
+    </div>
+
+    <!-- Header -->
+    <header class="bg-white dark:bg-dark-surface border-b border-gray-200 dark:border-dark-border px-4 py-3">
+        <div class="flex items-center justify-between">
+            <div class="flex items-center space-x-3">
+                <i class="fas fa-shield-alt text-primary text-xl"></i>
+                <h1 class="text-xl font-bold">DevVault Pro</h1>
+                <span class="text-sm text-gray-500 dark:text-gray-400">Secure Developer Vault</span>
+            </div>
+            <div class="flex items-center space-x-4">
+                <div class="flex items-center space-x-2">
+                    <span class="text-sm text-gray-500" id="sync-status">Offline</span>
+                    <div class="sync-indicator sync-offline" id="sync-indicator"></div>
+                </div>
+                <div class="flex items-center space-x-2">
+                    <span class="text-sm text-gray-500" id="user-email">Not signed in</span>
+                    <button onclick="signOut()" id="signout-btn" class="hidden text-sm text-red-500 hover:text-red-700">
+                        <i class="fas fa-sign-out-alt"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Tab Navigation -->
+    <nav class="bg-gray-50 dark:bg-dark-surface border-b border-gray-200 dark:border-dark-border px-4">
+        <div class="flex space-x-1 overflow-x-auto">
+            <button onclick="switchTab('terminal')" id="tab-terminal" class="tab-btn px-4 py-2 text-sm font-medium rounded-t-lg whitespace-nowrap">
+                <i class="fas fa-terminal mr-2"></i>Terminal
+            </button>
+            <button onclick="switchTab('notes')" id="tab-notes" class="tab-btn px-4 py-2 text-sm font-medium rounded-t-lg whitespace-nowrap">
+                <i class="fas fa-sticky-note mr-2"></i>Notes
+            </button>
+            <button onclick="switchTab('github')" id="tab-github" class="tab-btn px-4 py-2 text-sm font-medium rounded-t-lg whitespace-nowrap">
+                <i class="fab fa-github mr-2"></i>GitHub
+            </button>
+            <button onclick="switchTab('ai')" id="tab-ai" class="tab-btn px-4 py-2 text-sm font-medium rounded-t-lg whitespace-nowrap">
+                <i class="fas fa-robot mr-2"></i>AI Assistant
+            </button>
+            <button onclick="switchTab('settings')" id="tab-settings" class="tab-btn px-4 py-2 text-sm font-medium rounded-t-lg whitespace-nowrap">
+                <i class="fas fa-cog mr-2"></i>Settings
+            </button>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="flex-1 h-[calc(100vh-120px)]">
+        <!-- Terminal Tab -->
+        <div id="content-terminal" class="tab-content h-full p-4">
+            <div class="bg-black text-green-400 terminal-font text-sm h-full rounded-lg overflow-hidden flex flex-col">
+                <div class="bg-gray-800 px-4 py-2 flex items-center justify-between">
+                    <div class="flex items-center space-x-2">
+                        <div class="w-3 h-3 bg-red-500 rounded-full"></div>
+                        <div class="w-3 h-3 bg-yellow-500 rounded-full"></div>
+                        <div class="w-3 h-3 bg-green-500 rounded-full"></div>
+                        <span class="text-gray-300 text-xs ml-2">DevVault Terminal Pro</span>
+                    </div>
+                    <div class="text-xs text-gray-400">Secure Session</div>
+                </div>
+                <div class="flex-1 p-4 overflow-y-auto" id="terminal-output">
+                    <div class="mb-2">Welcome to DevVault Terminal Pro v2.0.0</div>
+                    <div class="mb-2">Secure cloud-connected developer environment</div>
+                    <div class="mb-2">Type 'help' for available commands</div>
+                    <div class="mb-2">devvault@cloud:~$ <span class="cursor">█</span></div>
+                </div>
+                <div class="p-4 border-t border-gray-700">
+                    <div class="flex items-center">
+                        <span class="text-green-400 mr-2">devvault@cloud:~$</span>
+                        <input type="text" id="terminal-input" class="bg-transparent border-none outline-none flex-1 text-green-400 terminal-font text-base" placeholder="Enter command..." autocomplete="off">
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Notes Tab -->
+        <div id="content-notes" class="tab-content h-full p-4 hidden">
+            <div class="h-full flex flex-col lg:flex-row gap-4">
+                <!-- Notes List -->
+                <div class="lg:w-1/3">
+                    <div class="bg-white dark:bg-dark-surface rounded-lg border border-gray-200 dark:border-dark-border h-full flex flex-col">
+                        <div class="p-4 border-b border-gray-200 dark:border-dark-border">
+                            <div class="flex items-center justify-between mb-3">
+                                <h3 class="font-semibold flex items-center">
+                                    Notes
+                                    <i class="fas fa-cloud ml-2 text-primary text-sm" title="Cloud synced"></i>
+                                </h3>
+                                <button onclick="createNote()" class="bg-primary text-white px-3 py-1 rounded text-sm hover:opacity-90">
+                                    <i class="fas fa-plus mr-1"></i>New
+                                </button>
+                            </div>
+                            <input type="text" id="notes-search" placeholder="Search notes..." class="w-full px-3 py-2 border border-gray-300 dark:border-dark-border rounded text-base bg-white dark:bg-dark-bg">
+                        </div>
+                        <div class="flex-1 overflow-y-auto" id="notes-list">
+                            <div class="p-4 text-center text-gray-500">
+                                <i class="fas fa-cloud-download-alt text-2xl mb-2"></i>
+                                <p>Loading notes from cloud...</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Note Editor -->
+                <div class="lg:w-2/3">
+                    <div class="bg-white dark:bg-dark-surface rounded-lg border border-gray-200 dark:border-dark-border h-full flex flex-col">
+                        <div class="p-4 border-b border-gray-200 dark:border-dark-border">
+                            <input type="text" id="note-title" placeholder="Note title..." class="w-full text-lg font-semibold bg-transparent border-none outline-none text-base">
+                        </div>
+                        <div class="flex-1 flex">
+                            <textarea id="note-content" placeholder="Start writing your note in Markdown..." class="w-1/2 p-4 border-r border-gray-200 dark:border-dark-border resize-none outline-none bg-transparent terminal-font text-base"></textarea>
+                            <div class="w-1/2 p-4 overflow-y-auto markdown-content" id="note-preview"></div>
+                        </div>
+                        <div class="p-4 border-t border-gray-200 dark:border-dark-border flex justify-between">
+                            <div class="flex space-x-2">
+                                <button onclick="saveNote()" class="bg-primary text-white px-4 py-2 rounded hover:opacity-90">
+                                    <i class="fas fa-save mr-2"></i>Save
+                                </button>
+                                <button onclick="shareNote()" class="bg-blue-500 text-white px-4 py-2 rounded hover:opacity-90">
+                                    <i class="fas fa-share mr-2"></i>Share
+                                </button>
+                            </div>
+                            <button onclick="deleteNote()" class="bg-red-500 text-white px-4 py-2 rounded hover:opacity-90">
+                                <i class="fas fa-trash mr-2"></i>Delete
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- GitHub Tab -->
+        <div id="content-github" class="tab-content h-full p-4 hidden">
+            <div class="max-w-4xl mx-auto">
+                <div class="bg-white dark:bg-dark-surface rounded-lg border border-gray-200 dark:border-dark-border p-6">
+                    <h3 class="text-lg font-semibold mb-4">
+                        <i class="fab fa-github mr-2"></i>Secure GitHub Integration
+                        <i class="fas fa-shield-alt text-green-500 ml-2 text-sm" title="Tokens encrypted and proxied"></i>
+                    </h3>
+                    
+                    <!-- GitHub Auth Status -->
+                    <div class="mb-6 p-4 bg-blue-50 dark:bg-blue-900 rounded-lg">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <h4 class="font-medium text-blue-900 dark:text-blue-100">Secure Token Management</h4>
+                                <p class="text-sm text-blue-700 dark:text-blue-300">Tokens are encrypted and stored securely. API calls are proxied through our backend.</p>
+                            </div>
+                            <div id="github-status" class="text-sm">
+                                <span class="px-2 py-1 bg-gray-200 dark:bg-gray-700 rounded">Not Connected</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- GitHub Token Input -->
+                    <div class="mb-6">
+                        <label class="block text-sm font-medium mb-2">GitHub Personal Access Token</label>
+                        <div class="flex gap-2">
+                            <input type="password" id="github-token" placeholder="ghp_xxxxxxxxxxxxxxxxxxxx" class="flex-1 px-3 py-2 border border-gray-300 dark:border-dark-border rounded text-base bg-white dark:bg-dark-bg">
+                            <button onclick="connectGitHubSecure()" class="bg-primary text-white px-4 py-2 rounded hover:opacity-90">
+                                <i class="fas fa-shield-alt mr-1"></i>Secure Connect
+                            </button>
+                        </div>
+                        <p class="text-sm text-gray-500 mt-1">
+                            Get your token from <a href="https://github.com/settings/tokens" target="_blank" class="text-primary hover:underline">GitHub Settings</a>
+                            • Your token is encrypted before storage
+                        </p>
+                    </div>
+
+                    <!-- Repository Info -->
+                    <div class="grid md:grid-cols-2 gap-4 mb-6">
+                        <div>
+                            <label class="block text-sm font-medium mb-2">Repository</label>
+                            <input type="text" id="repo-input" placeholder="username/repository" class="w-full px-3 py-2 border border-gray-300 dark:border-dark-border rounded text-base bg-white dark:bg-dark-bg">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium mb-2">Branch</label>
+                            <input type="text" id="branch-input" placeholder="main" value="main" class="w-full px-3 py-2 border border-gray-300 dark:border-dark-border rounded text-base bg-white dark:bg-dark-bg">
+                        </div>
+                    </div>
+
+                    <!-- Actions -->
+                    <div class="flex flex-wrap gap-2 mb-6">
+                        <button onclick="fetchRepoSecure()" class="bg-blue-500 text-white px-4 py-2 rounded hover:opacity-90">
+                            <i class="fas fa-download mr-2"></i>Fetch Repository
+                        </button>
+                        <button onclick="fetchCommitsSecure()" class="bg-green-500 text-white px-4 py-2 rounded hover:opacity-90">
+                            <i class="fas fa-history mr-2"></i>Recent Commits
+                        </button>
+                        <button onclick="fetchIssuesSecure()" class="bg-orange-500 text-white px-4 py-2 rounded hover:opacity-90">
+                            <i class="fas fa-exclamation-circle mr-2"></i>Issues
+                        </button>
+                        <button onclick="createWebhook()" class="bg-purple-500 text-white px-4 py-2 rounded hover:opacity-90">
+                            <i class="fas fa-webhook mr-2"></i>Setup Webhook
+                        </button>
+                    </div>
+
+                    <!-- Results -->
+                    <div id="github-results" class="bg-gray-50 dark:bg-dark-bg rounded-lg p-4 terminal-font text-sm max-h-96 overflow-y-auto">
+                        <div class="text-gray-500">Connect to GitHub securely to start syncing...</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- AI Assistant Tab -->
+        <div id="content-ai" class="tab-content h-full p-4 hidden">
+            <div class="h-full flex flex-col max-w-4xl mx-auto">
+                <div class="bg-white dark:bg-dark-surface rounded-lg border border-gray-200 dark:border-dark-border flex flex-col h-full">
+                    <!-- AI Chat Header -->
+                    <div class="p-4 border-b border-gray-200 dark:border-dark-border">
+                        <div class="flex items-center justify-between">
+                            <h3 class="font-semibold">
+                                <i class="fas fa-robot mr-2 text-primary"></i>AI Assistant
+                                <i class="fas fa-shield-alt text-green-500 ml-2 text-sm" title="Secure proxy connection"></i>
+                            </h3>
+                            <div class="flex items-center space-x-2">
+                                <select id="ai-bot-select" class="px-3 py-1 border border-gray-300 dark:border-dark-border rounded text-sm bg-white dark:bg-dark-bg">
+                                    <option value="Claude-Sonnet-4">Claude Sonnet 4</option>
+                                    <option value="GPT-4o">GPT-4o</option>
+                                    <option value="GPT-4o-mini">GPT-4o Mini</option>
+                                    <option value="Gemini-2.0-Flash">Gemini 2.0 Flash</option>
+                                </select>
+                                <button onclick="exportChat()" class="text-sm px-2 py-1 border border-gray-300 rounded hover:bg-gray-50">
+      
