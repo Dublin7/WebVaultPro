@@ -1,4 +1,4 @@
-modules = ["nodejs-20", "web", "postgresql-16"]
+modules = ["nodejs-20", "web", "postgresql-16", "dotnet-7.0", "dotnet-8.0", "angular-node-20", "bash", "bun-1.2", "bun-1.1", "c-clang14", "go-1.23", "gcloud", "java-graalvm22.3", "nix", "nodejs-23", "python-3.9", "ruby-3.2", "typescript-language-server", "docker"]
 run = "npm run dev"
 hidden = [".config", ".git", "generated-icon.png", "node_modules", "dist"]
 
@@ -34,3 +34,6 @@ author = "agent"
 task = "shell.exec"
 args = "npm run dev"
 waitForPort = 5000
+
+[objectStorage]
+defaultBucketID = "replit-objstore-90e56ae2-7f31-42f8-bd8b-02832739b259"
