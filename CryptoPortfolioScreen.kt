@@ -21,7 +21,22 @@ data class CryptoAsset(
     val price: Double,
     val change24h: Double,
     val holdings: Double,
-    val value: Double
+    val value: Double,
+    val stakingYield: Double = 0.0,
+    val priceAlert: Double? = null,
+    val alertType: AlertType = AlertType.NONE
+)
+
+enum class AlertType {
+    NONE, ABOVE, BELOW
+}
+
+data class DeFiPosition(
+    val protocol: String,
+    val asset: String,
+    val deposited: Double,
+    val apy: Double,
+    val earned: Double
 )
 
 data class Portfolio(

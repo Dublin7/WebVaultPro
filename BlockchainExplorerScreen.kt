@@ -37,7 +37,16 @@ data class AddressInfo(
     val address: String,
     val balance: String,
     val transactionCount: Int,
-    val transactions: List<Transaction>
+    val transactions: List<Transaction>,
+    val nftCount: Int = 0,
+    val tokenBalances: Map<String, Double> = emptyMap()
+)
+
+data class GasTracker(
+    val slow: String,
+    val standard: String,
+    val fast: String,
+    val network: String
 )
 
 @OptIn(ExperimentalMaterial3Api::class)

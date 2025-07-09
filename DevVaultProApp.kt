@@ -72,7 +72,7 @@ fun DevVaultProApp() {
                     NavigationBarItem(
                         icon = { Icon(Icons.Default.CurrencyBitcoin, contentDescription = "Crypto") },
                         label = { Text("Crypto") },
-                        selected = currentRoute == "crypto",
+                        selected = currentRoute?.startsWith("crypto") == true,
                         onClick = { navController.navigate("crypto") }
                     )
                     NavigationBarItem(
