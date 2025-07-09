@@ -83,11 +83,17 @@ fun DevVaultProApp() {
                         selected = currentRoute == "sleep",
                         onClick = { navController.navigate("sleep") }
                     )
-                     NavigationBarItem(
+                    NavigationBarItem(
                         icon = { Icon(Icons.Default.Image, contentDescription = "NFT Minting") },
                         label = { Text("NFT Minting") },
                         selected = currentRoute == "crypto/nft",
                         onClick = { navController.navigate("crypto/nft") }
+                    )
+                    NavigationBarItem(
+                        icon = { Icon(Icons.Default.CloudUpload, contentDescription = "GitHub") },
+                        label = { Text("GitHub") },
+                        selected = currentRoute == "github",
+                        onClick = { navController.navigate("github") }
                     )
                 }
             }
@@ -100,7 +106,7 @@ fun DevVaultProApp() {
                 composable("notes") { NotesScreen() }
                 composable("files") { FileScreen() }
                 composable("terminal") { TerminalScreen() }
-                composable("github") { /* GitHubScreen() */ }
+                composable("github") { GitHubScreen() }
                 composable("snippets") { CodeSnippetScreen() }
                 composable("templates") { ProjectTemplatesScreen() }
                 composable("api-testing") { ApiTestingScreen() }
@@ -186,6 +192,11 @@ fun NFTMintingScreen() {
         Spacer(modifier = Modifier.height(16.dp))
         Text("AI Powered NFT Creation Studio Coming Soon!", style = MaterialTheme.typography.bodyMedium)
     }
+}
+
+@Composable
+fun GitHubScreen() {
+    Text("GitHub Screen")
 }
 
 @Preview(showBackground = true)
