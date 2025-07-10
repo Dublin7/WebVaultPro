@@ -9,7 +9,7 @@ import {
   DropdownMenuTrigger,
   DropdownMenuSeparator
 } from "@/components/ui/dropdown-menu";
-import { ChevronDown, Terminal, Bot } from "lucide-react";
+import { ChevronDown, Terminal, Bot, Sparkles } from "lucide-react";
 import { Link } from "wouter";
 
 export default function Navigation() {
@@ -62,6 +62,10 @@ export default function Navigation() {
                   <Link href="/ai-agents" className="text-gray-500 hover:text-blue-600 px-3 py-2 rounded-md text-sm font-medium transition-colors flex items-center gap-1">
                     <Bot className="w-4 h-4" />
                     AI Agents
+                  </Link>
+                  <Link href="/ai-studio" className="text-gray-500 hover:text-blue-600 px-3 py-2 rounded-md text-sm font-medium transition-colors flex items-center gap-1">
+                    <Sparkles className="w-4 h-4" />
+                    AI Studio
                   </Link>
                 </div>
               </div>

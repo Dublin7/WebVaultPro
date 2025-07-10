@@ -2,7 +2,7 @@
 
 ## Overview
 
-DevVault Pro is a modern web application built with React/TypeScript frontend and Node.js/Express backend. The application implements secure authentication using Replit's OpenID Connect (OIDC) system and provides a foundation for building authenticated web applications. The project follows a monorepo structure with shared schemas and utilities.
+DevVault Pro is a comprehensive web application built with React/TypeScript frontend and Node.js/Express backend. The application implements secure authentication using Replit's OpenID Connect (OIDC) system and provides multiple developer tools including a shell command generator, AI agents system, and AI studio for media generation. The project follows a monorepo structure with shared schemas and utilities.
 
 ## User Preferences
 
@@ -42,7 +42,30 @@ Preferred communication style: Simple, everyday language.
 ### Database Schema
 - **Users Table**: Stores user profiles with email, names, and profile images
 - **Sessions Table**: Handles secure session storage (required for Replit Auth)
+- **Agents Table**: AI agents with configurations and execution status
+- **Tasks Table**: Task management for AI agents with progress tracking
+- **Agent Logs Table**: Detailed logging for AI agent activities
 - **Schema Validation**: Zod schemas for type safety and validation
+
+### AI Studio & Media Generation
+- **Audio Generator**: Creates techno, drum & bass, and electronic music
+- **Video Generator**: Generates videos from text descriptions with multiple styles
+- **File Management**: Automatic file organization and storage
+- **Integration Hub**: Connects with Galxe, Metaschool, and Google Keep
+- **Synthetic Media**: Creates WAV audio files and MP4 video placeholders
+
+### AI Agents System
+- **Agent Types**: Code Saver, Document Manager, Web Scraper, Data Processor, File Organizer
+- **Task Execution**: Real-time task processing with progress tracking
+- **File Operations**: Automated file creation, organization, and management
+- **Live Controls**: Start, stop, pause agents with real-time status updates
+- **Logging System**: Comprehensive activity logging and monitoring
+
+### Shell Command Generator
+- **Template System**: Customizable command templates with variables
+- **Example Library**: Practical examples for development, Git, system monitoring
+- **AI Integration**: Natural language to shell command conversion
+- **Copy Functionality**: One-click command copying to clipboard
 
 ### UI Components
 - **Design System**: shadcn/ui components built on Radix UI
