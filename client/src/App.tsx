@@ -10,6 +10,7 @@ import Dashboard from "@/pages/dashboard";
 import ShellGenerator from "@/pages/shell-generator";
 import AIAgents from "@/pages/ai-agents";
 import AIStudio from "@/pages/ai-studio";
+import NFTMarketplace from "@/pages/nft-marketplace";
 import NotFound from "@/pages/not-found";
 
 function Router() {
@@ -27,6 +28,7 @@ function Router() {
             <Route path="/shell-generator" component={ShellGenerator} />
             <Route path="/ai-agents" component={AIAgents} />
             <Route path="/ai-studio" component={AIStudio} />
+            <Route path="/nft-marketplace" component={NFTMarketplace} />
           </>
         )}
         <Route component={NotFound} />

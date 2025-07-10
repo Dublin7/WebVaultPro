@@ -426,6 +426,272 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // NFT Marketplace routes
+  app.post("/api/nft/list", isAuthenticated, async (req: any, res) => {
+    try {
+      const { tokenId, contractAddress, price, currency } = req.body;
+      const userId = req.user.claims.sub;
+      
+      // Create NFT listing folder
+      const nftFolder = './nft-listings';
+      await fs.mkdir(nftFolder, { recursive: true });
+      
+      // Simulate NFT listing
+      const listingId = uuidv4();
+      const listing = {
+        id: listingId,
+        tokenId: tokenId,
+        contractAddress: contractAddress,
+        price: price,
+        currency: currency,
+        seller: userId,
+        status: 'active',
+        createdAt: new Date().toISOString(),
+        chain: 'ethereum',
+        marketplaceUrl: `https://opensea.io/assets/${contractAddress}/${tokenId}`,
+        okxUrl: `https://www.okx.com/web3/marketplace/nft/asset/${contractAddress}/${tokenId}`
+      };
+      
+      // Save listing to file
+      const listingPath = path.join(nftFolder, `${listingId}.json`);
+      await fs.writeFile(listingPath, JSON.stringify(listing, null, 2));
+      
+      res.json(listing);
+    } catch (error) {
+      console.error("Error listing NFT:", error);
+      res.status(500).json({ message: "Failed to list NFT" });
+    }
+  });
+
+  app.get("/api/nft/listings", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      
+      // Simulate fetching NFT listings
+      const listings = [
+        {
+          id: uuidv4(),
+          tokenId: '1234',
+          contractAddress: '0x123...abc',
+          name: 'Cosmic Warrior #1234',
+          description: 'A legendary cosmic warrior from the outer realms',
+          price: 2.5,
+          currency: 'ETH',
+          seller: userId,
+          collection: 'Cosmic Warriors',
+          rarity: 'Legendary',
+          chain: 'ethereum',
+          status: 'active',
+          views: 1250,
+          likes: 89,
+          createdAt: new Date().toISOString()
+        }
+      ];
+      
+      res.json(listings);
+    } catch (error) {
+      console.error("Error fetching NFT listings:", error);
+      res.status(500).json({ message: "Failed to fetch NFT listings" });
+    }
+  });
+
+  app.post("/api/nft/buy", isAuthenticated, async (req: any, res) => {
+    try {
+      const { listingId, price, currency } = req.body;
+      const userId = req.user.claims.sub;
+      
+      // Simulate NFT purchase
+      const transaction = {
+        id: uuidv4(),
+        listingId: listingId,
+        buyer: userId,
+        price: price,
+        currency: currency,
+        status: 'pending',
+        transactionHash: `0x${Array.from({length: 64}, () => Math.floor(Math.random() * 16).toString(16)).join('')}`,
+        createdAt: new Date().toISOString(),
+        estimatedConfirmation: new Date(Date.now() + 5 * 60 * 1000).toISOString() // 5 minutes
+      };
+      
+      res.json(transaction);
+    } catch (error) {
+      console.error("Error purchasing NFT:", error);
+      res.status(500).json({ message: "Failed to purchase NFT" });
+    }
+  });
+
+  app.post("/api/nft/create", isAuthenticated, async (req: any, res) => {
+    try {
+      const { name, description, imageData, price, currency, collection, chain } = req.body;
+      const userId = req.user.claims.sub;
+      
+      // Create NFT creation folder
+      const nftFolder = './created-nfts';
+      await fs.mkdir(nftFolder, { recursive: true });
+      
+      // Simulate NFT creation/minting
+      const nftId = uuidv4();
+      const tokenId = Math.floor(Math.random() * 10000);
+      const contractAddress = `0x${Array.from({length: 40}, () => Math.floor(Math.random() * 16).toString(16)).join('')}`;
+      
+      const nft = {
+        id: nftId,
+        tokenId: tokenId.toString(),
+        contractAddress: contractAddress,
+        name: name,
+        description: description,
+        creator: userId,
+        owner: userId,
+        price: price,
+        currency: currency,
+        collection: collection,
+        chain: chain,
+        status: 'minted',
+        rarity: 'Common',
+        attributes: [
+          { trait_type: 'Creator', value: 'User' },
+          { trait_type: 'Generation', value: 'AI Generated' }
+        ],
+        createdAt: new Date().toISOString(),
+        mintTransactionHash: `0x${Array.from({length: 64}, () => Math.floor(Math.random() * 16).toString(16)).join('')}`,
+        metadataUri: `https://api.devvault.pro/metadata/${nftId}`,
+        openseaUrl: `https://opensea.io/assets/${contractAddress}/${tokenId}`,
+        okxUrl: `https://www.okx.com/web3/marketplace/nft/asset/${contractAddress}/${tokenId}`
+      };
+      
+      // Save NFT data to file
+      const nftPath = path.join(nftFolder, `${nftId}.json`);
+      await fs.writeFile(nftPath, JSON.stringify(nft, null, 2));
+      
+      res.json(nft);
+    } catch (error) {
+      console.error("Error creating NFT:", error);
+      res.status(500).json({ message: "Failed to create NFT" });
+    }
+  });
+
+  app.get("/api/nft/collections", isAuthenticated, async (req: any, res) => {
+    try {
+      // Simulate fetching NFT collections
+      const collections = [
+        {
+          id: uuidv4(),
+          name: 'Cosmic Warriors',
+          description: 'A collection of legendary warriors from the cosmos',
+          floorPrice: 1.2,
+          totalVolume: 245.8,
+          itemCount: 10000,
+          ownerCount: 3456,
+          chain: 'ethereum',
+          contractAddress: '0x123...abc',
+          openseaUrl: 'https://opensea.io/collection/cosmic-warriors',
+          okxUrl: 'https://www.okx.com/web3/marketplace/nft/collection/cosmic-warriors'
+        },
+        {
+          id: uuidv4(),
+          name: 'Digital Landscapes',
+          description: 'Beautiful digital art landscapes and environments',
+          floorPrice: 0.5,
+          totalVolume: 89.2,
+          itemCount: 5000,
+          ownerCount: 1234,
+          chain: 'polygon',
+          contractAddress: '0x234...bcd',
+          openseaUrl: 'https://opensea.io/collection/digital-landscapes',
+          okxUrl: 'https://www.okx.com/web3/marketplace/nft/collection/digital-landscapes'
+        }
+      ];
+      
+      res.json(collections);
+    } catch (error) {
+      console.error("Error fetching NFT collections:", error);
+      res.status(500).json({ message: "Failed to fetch NFT collections" });
+    }
+  });
+
+  app.post("/api/nft/okx/sync", isAuthenticated, async (req: any, res) => {
+    try {
+      const { walletAddress } = req.body;
+      const userId = req.user.claims.sub;
+      
+      // Simulate OKX NFT sync
+      const syncResult = {
+        success: true,
+        walletAddress: walletAddress,
+        nftsFound: 25,
+        collectionsFound: 8,
+        totalValue: 12.5,
+        lastSync: new Date().toISOString(),
+        okxProfileUrl: `https://www.okx.com/web3/marketplace/nft/profile/${walletAddress}`,
+        nfts: [
+          {
+            tokenId: '1001',
+            contractAddress: '0x789...ghi',
+            name: 'OKX Premium #1001',
+            collection: 'OKX Premium Collection',
+            price: 1.8,
+            currency: 'ETH',
+            rarity: 'Rare',
+            chain: 'ethereum',
+            okxUrl: `https://www.okx.com/web3/marketplace/nft/asset/0x789...ghi/1001`
+          }
+        ]
+      };
+      
+      res.json(syncResult);
+    } catch (error) {
+      console.error("Error syncing with OKX:", error);
+      res.status(500).json({ message: "Failed to sync with OKX" });
+    }
+  });
+
+  app.get("/api/nft/analytics", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      
+      // Simulate NFT analytics
+      const analytics = {
+        totalNFTs: 42,
+        totalValue: 28.5,
+        totalVolume: 156.7,
+        totalSales: 18,
+        averagePrice: 1.6,
+        topCollection: 'Cosmic Warriors',
+        mostValuableNFT: {
+          name: 'Cosmic Warrior #1234',
+          value: 2.5,
+          currency: 'ETH'
+        },
+        recentActivity: [
+          {
+            type: 'purchase',
+            nft: 'Digital Landscape #5678',
+            price: 0.8,
+            currency: 'ETH',
+            date: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString()
+          },
+          {
+            type: 'sale',
+            nft: 'Cosmic Warrior #9999',
+            price: 3.2,
+            currency: 'ETH',
+            date: new Date(Date.now() - 72 * 60 * 60 * 1000).toISOString()
+          }
+        ],
+        monthlyVolume: [
+          { month: 'Jan', volume: 45.2 },
+          { month: 'Feb', volume: 38.7 },
+          { month: 'Mar', volume: 72.8 }
+        ]
+      };
+      
+      res.json(analytics);
+    } catch (error) {
+      console.error("Error fetching NFT analytics:", error);
+      res.status(500).json({ message: "Failed to fetch NFT analytics" });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }

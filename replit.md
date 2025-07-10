@@ -67,6 +67,15 @@ Preferred communication style: Simple, everyday language.
 - **AI Integration**: Natural language to shell command conversion
 - **Copy Functionality**: One-click command copying to clipboard
 
+### NFT Marketplace & OKX Integration
+- **Personal NFT Marketplace**: Create, list, and sell NFTs with full marketplace functionality
+- **OKX Integration**: Sync existing NFTs from OKX Marketplace
+- **Multi-Chain Support**: Ethereum, Polygon, BNB Chain, Arbitrum, Optimism
+- **Collection Management**: Create and manage NFT collections with analytics
+- **Wallet Integration**: Connect crypto wallets for buying/selling
+- **Sharing System**: Share NFTs across web and social platforms
+- **File Management**: Automatic organization of NFT assets and metadata
+
 ### UI Components
 - **Design System**: shadcn/ui components built on Radix UI
 - **Styling**: Tailwind CSS with CSS variables for theming
